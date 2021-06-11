@@ -217,7 +217,7 @@ class Nave(ElementoSprite):
 class Virus(Nave):
     def __init__(self, position, lives=1, speed=None, image=None, size=(100, 100)):
         if not image:
-            image = "virus.png"
+            image = "virus_orange.png"
         super().__init__(position, lives, speed, image, size)
 
 
