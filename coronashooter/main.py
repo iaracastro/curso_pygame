@@ -12,6 +12,10 @@ from fundo import Fundo
 from elementos import ElementoSprite
 import random
 
+pygame.init()
+from pygame import mixer
+mixer.music.load('corona_soundtrack.mp3')
+mixer.music.play(-1)
 
 class Jogo:
     def __init__(self, size=(1000, 1000), fullscreen=False):
@@ -107,6 +111,7 @@ class Jogo:
         hitted = self.verifica_impactos(self.elementos["tiros"],
                                         self.elementos["virii"],
                                         Virus.alvejado)
+
 
         # Aumenta a pontos baseado no número de acertos:
         self.jogador.set_pontos(self.jogador.get_pontos() + len(hitted))
