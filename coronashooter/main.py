@@ -39,6 +39,7 @@ class Jogo:
         soundtrack = os.path.join('sons', soundtrack)
         mixer.music.load(soundtrack)
         mixer.music.play(-1)
+
         self.run = True
 
 
@@ -51,6 +52,7 @@ class Jogo:
     def game_over_text(self):
         over_text = self.fonte.render("GAME OVER", True, (255, 255, 255))
         self.tela.blit(over_text, (200, 250))
+
 
     def manutenção(self):
         r = random.randint(0, 100)
@@ -114,7 +116,6 @@ class Jogo:
         self.verifica_impactos(self.jogador, self.elementos["tiros_inimigo"],
                                self.jogador.alvejado)
         if self.jogador.morto:
-
             self.run = False
             return
 
@@ -247,7 +248,7 @@ class Nave(ElementoSprite):
 class Virus(Nave):
     def __init__(self, position, lives=1, speed=None, image=None, size=(80,80)):
         if not image:
-            image = "virus_orange.png"
+            image = "virus_verde.png"
         super().__init__(position, lives, speed, image, size)
 
 
