@@ -1,24 +1,20 @@
 import pygame
+import os
 from pygame.locals import (DOUBLEBUF,
                            FULLSCREEN,
-                           KEYDOWN,
-                           KEYUP,
-                           K_LEFT,
-                           K_RIGHT,
+                           KEYDOWN, K_s,
+                           KEYUP, K_w,
+                           K_LEFT, K_a,
+                           K_RIGHT, K_d,
                            QUIT,
-                           K_ESCAPE, K_UP, K_DOWN, K_RCTRL, K_LCTRL
+                           K_ESCAPE, K_UP, K_DOWN, K_RCTRL, K_LCTRL, K_SPACE
                            )
 from fundo import Fundo
 from elementos import ElementoSprite
 import random
 
-pygame.init()
-from pygame import mixer
-mixer.music.load('corona_soundtrack.mp3')
-mixer.music.play(-1)
-
 class Jogo:
-    def __init__(self, size=(1000, 1000), fullscreen=False):
+    def __init__(self, icon="virus_orange.png", soundtrack="corona_soundtrack.mp3", size=(900,810), fullscreen=False):
         self.elementos = {}
         pygame.init()
         self.tela = pygame.display.set_mode(size)
@@ -32,16 +28,29 @@ class Jogo:
             flags |= FULLSCREEN
 
         self.screen_size = self.tela.get_size()
-        pygame.mouse.set_visible(0)
+        pygame.mouse.set_visible(1)
         pygame.display.set_caption('Corona Shooter')
+        icon = os.path.join('imagens', icon)
+        icon = pygame.image.load(icon).convert()
+        pygame.display.set_icon(icon)
+
+        #Soundtrack
+        from pygame import mixer
+        soundtrack = os.path.join('sons', soundtrack)
+        mixer.music.load(soundtrack)
+        mixer.music.play(-1)
         self.run = True
 
 
     def escreve_placar(self):
-        vidas = self.fonte.render(f'vidas: {self.jogador.get_lives()*"❤"}', 1, (255, 255, 0), (0, 0, 0))
+        vidas = self.fonte.render(f'Vidas: {self.jogador.get_lives()*"❤"}', 1, (255, 255, 0), (0, 0, 0))
         score = self.fonte.render(f'Score: {self.jogador.pontos}', 1, (255, 255, 0), (0, 0, 0))
-        self.tela.blit(vidas, (30, 30))
-        self.tela.blit(score, (self.screen_size[0] - 300, 30))
+        self.tela.blit(vidas, (30, 25))
+        self.tela.blit(score, (self.screen_size[0] - 200, 25))
+
+    def game_over_text(self):
+        over_text = self.fonte.render("GAME OVER", True, (255, 255, 255))
+        self.tela.blit(over_text, (200, 250))
 
     def manutenção(self):
         r = random.randint(0, 100)
@@ -97,7 +106,7 @@ class Jogo:
                 action()
             return elemento.morto
 
-    def ação_elemento(self):
+    def ação_elemento(self, explosionSound="short_explosion.wav"):
         """
         Executa as ações dos elementos do jogo.
         :return:
@@ -105,6 +114,7 @@ class Jogo:
         self.verifica_impactos(self.jogador, self.elementos["tiros_inimigo"],
                                self.jogador.alvejado)
         if self.jogador.morto:
+
             self.run = False
             return
 
@@ -118,30 +128,35 @@ class Jogo:
         hitted = self.verifica_impactos(self.elementos["tiros"],
                                         self.elementos["virii"],
                                         Virus.alvejado)
-
+        if hitted:
+            explosionSound = os.path.join('sons', explosionSound)
+            explosionSound = pygame.mixer.Sound(explosionSound)
+            explosionSound.play()
 
         # Aumenta a pontos baseado no número de acertos:
         self.jogador.set_pontos(self.jogador.get_pontos() + len(hitted))
 
     def trata_eventos(self):
         event = pygame.event.poll()
+        # serve para quebrar o loop, fechar a janela.
         if event.type == pygame.QUIT:
             self.run = False
+
 
         if event.type in (KEYDOWN, KEYUP):
             key = event.key
             if key == K_ESCAPE:
                 self.run = False
-            elif key in (K_LCTRL, K_RCTRL):
+            elif key in (K_LCTRL, K_RCTRL, K_SPACE):
                 self.interval = 0
                 self.jogador.atira(self.elementos["tiros"])
-            elif key == K_UP:
+            elif key in (K_UP, K_w):
                 self.jogador.accel_top()
-            elif key == K_DOWN:
+            elif key in (K_DOWN, K_s):
                 self.jogador.accel_bottom()
-            elif key == K_RIGHT:
+            elif key in (K_RIGHT, K_d):
                 self.jogador.accel_right()
-            elif key == K_LEFT:
+            elif key in (K_LEFT, K_a):
                 self.jogador.accel_left()
 
         keys = pygame.key.get_pressed()
@@ -176,7 +191,7 @@ class Jogo:
 
 
 class Nave(ElementoSprite):
-    def __init__(self, position, lives=0, speed=[0, 0], image=None, new_size=[83, 248]):
+    def __init__(self, position, lives=0, speed=[0, 0], image=None, new_size=[100, 248]):
         self.acceleration = [3, 3]
         if not image:
             image = "seringa.png"
@@ -191,6 +206,8 @@ class Nave(ElementoSprite):
 
     def colisão(self):
         if self.get_lives() <= 0:
+            #crash = pygame.mixer.Sound("crash.wav")
+            #crash.play()
             self.kill()
         else:
             self.set_lives(self.get_lives() - 1)
@@ -228,7 +245,7 @@ class Nave(ElementoSprite):
 
 
 class Virus(Nave):
-    def __init__(self, position, lives=1, speed=None, image=None, size=(100, 100)):
+    def __init__(self, position, lives=1, speed=None, image=None, size=(80,80)):
         if not image:
             image = "virus_orange.png"
         super().__init__(position, lives, speed, image, size)
@@ -245,7 +262,7 @@ class Jogador(Nave):
     das outras.
     """
 
-    def __init__(self, position, lives=10, image=None, new_size=[83, 248]):
+    def __init__(self, position, lives=10, image=None, new_size=[50,140]):
         if not image:
             image = "seringa.png"
         super().__init__(position, lives, [0, 0], image, new_size)
