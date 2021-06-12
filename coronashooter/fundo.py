@@ -38,5 +38,6 @@ class Fundo:
         if self.pos[1] > 0:
             self.pos[1] -= self.imagesize[1]
 
+    #serve para redesenhar a screen uma posição a mais (self.pos)
     def draw(self, screen):
         screen.blit(self.image, self.pos)
