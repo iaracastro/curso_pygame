@@ -116,14 +116,14 @@ class Jogo:
         self.verifica_impactos(self.jogador, self.elementos["tiros_inimigo"],
                                self.jogador.alvejado)
         if self.jogador.morto:
-            #self.run = False
+            self.run = False
             return
 
         # Verifica se o personagem trombou em algum inimigo
         self.verifica_impactos(self.jogador, self.elementos["virii"],
                                self.jogador.colisão)
         if self.jogador.morto:
-            #self.run = False
+            self.run = False
             return
         # Verifica se o personagem atingiu algum alvo.
         hitted = self.verifica_impactos(self.elementos["tiros"],
