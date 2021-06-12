@@ -116,14 +116,14 @@ class Jogo:
         self.verifica_impactos(self.jogador, self.elementos["tiros_inimigo"],
                                self.jogador.alvejado)
         if self.jogador.morto:
-            self.run = False
+            #self.run = False
             return
 
         # Verifica se o personagem trombou em algum inimigo
         self.verifica_impactos(self.jogador, self.elementos["virii"],
                                self.jogador.colisão)
         if self.jogador.morto:
-            self.run = False
+            #self.run = False
             return
         # Verifica se o personagem atingiu algum alvo.
         hitted = self.verifica_impactos(self.elementos["tiros"],
@@ -297,9 +297,9 @@ class Jogador(Nave):
 
     def atira(self, lista_de_tiros, image=None):
         l = 1
-        if self.pontos > 10:
+        if self.pontos > 25:
             l = 3
-        if self.pontos > 50:
+        if self.pontos > 100:
             l = 5
 
         p = self.get_pos()
@@ -332,10 +332,10 @@ class Jogador(Nave):
 
 
 class Tiro(ElementoSprite):
-    def __init__(self, position, speed=None, image=None, list=None):
+    def __init__(self, position, speed=None, image=None, list=None, size=[60,60]):
         if not image:
             image = "tiro.png"
-        super().__init__(image, position, speed)
+        super().__init__(image, position, speed, size)
         if list is not None:
             self.add(list)
 
