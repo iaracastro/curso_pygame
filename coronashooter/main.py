@@ -38,7 +38,9 @@ class Jogo:
         from pygame import mixer
         soundtrack = os.path.join('sons', soundtrack)
         mixer.music.load(soundtrack)
+        mixer.music.set_volume(0.07)
         mixer.music.play(-1)
+
 
         self.run = True
 
@@ -50,7 +52,7 @@ class Jogo:
         self.tela.blit(score, (self.screen_size[0] - 200, 25))
 
     def game_over_text(self):
-        over_text = self.fonte.render("GAME OVER", True, (255, 255, 255))
+        over_text = self.fonte.render("GAME OVER", True, (255, 255, 255), (0, 0, 0))
         self.tela.blit(over_text, (200, 250))
 
 
@@ -108,7 +110,7 @@ class Jogo:
                 action()
             return elemento.morto
 
-    def ação_elemento(self, explosionSound="short_explosion.wav"):
+    def ação_elemento(self, explosionSound="short_explosion.wav", game_over="game_over.wav"):
         """
         Executa as ações dos elementos do jogo.
         :return:
@@ -116,14 +118,22 @@ class Jogo:
         self.verifica_impactos(self.jogador, self.elementos["tiros_inimigo"],
                                self.jogador.alvejado)
         if self.jogador.morto:
-            self.run = False
+            pygame.mixer.music.stop()
+            #game_over = os.path.join('sons', game_over)
+            #game_over = pygame.mixer.Sound(game_over)
+            #game_over.play()
+            #self.game_over_text()
+            #self.run = Falses
             return
 
         # Verifica se o personagem trombou em algum inimigo
         self.verifica_impactos(self.jogador, self.elementos["virii"],
                                self.jogador.colisão)
         if self.jogador.morto:
-            self.run = False
+            pygame.mixer.music.stop()
+
+            self.game_over_text()
+            #self.run = False
             return
         # Verifica se o personagem atingiu algum alvo.
         hitted = self.verifica_impactos(self.elementos["tiros"],
