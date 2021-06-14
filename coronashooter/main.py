@@ -352,8 +352,6 @@ class Jogo:
         self.elementos['virii'] = pygame.sprite.RenderPlain(Virus([120, 50]))
         self.jogador = Jogador([self.screen_size[0]/6, self.screen_size[1]-150], 5)
         #self.elementos['jogador'] = pygame.sprite.RenderPlain(self.jogador)
-        self.elementos['tiros'] = pygame.sprite.RenderPlain()
-        self.elementos['tiros_inimigo'] = pygame.sprite.RenderPlain()
         menu_soundtrack = os.path.join('sons', menu_soundtrack)
         mixer.music.load(menu_soundtrack)
         mixer.music.set_volume(0.03)
@@ -372,11 +370,6 @@ class Jogo:
     def loop_personalizar(self, menu_soundtrack="menu_soundtrack.mp3"):
         clock = pygame.time.Clock()
         dt = 16
-        #self.elementos['virii'] = pygame.sprite.RenderPlain(Virus([120, 50]))
-        self.jogador = Jogador([self.screen_size[0]/6, self.screen_size[1]-150], 5)
-        self.elementos['jogador'] = pygame.sprite.RenderPlain(self.jogador)
-        self.elementos['tiros'] = pygame.sprite.RenderPlain()
-        self.elementos['tiros_inimigo'] = pygame.sprite.RenderPlain()
         menu_soundtrack = os.path.join('sons', menu_soundtrack)
         mixer.music.load(menu_soundtrack)
         mixer.music.set_volume(0.03)
@@ -384,6 +377,8 @@ class Jogo:
         while self.run:
             clock.tick(1000 / dt)
             #self.ação_elemento()
+            self.jogador = Jogador([self.screen_size[0] / 6, self.screen_size[1] - 150], 5)
+            self.elementos['jogador'] = pygame.sprite.RenderPlain(self.jogador)
             self.manutenção()
             self.atualiza_elementos(dt)
             self.desenha_elementos()
