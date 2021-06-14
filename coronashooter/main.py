@@ -1,59 +1,100 @@
 import pygame
+
+from pygame import mixer
 import os
 from pygame.locals import (DOUBLEBUF,
                            FULLSCREEN,
-                           KEYDOWN, K_s,
-                           KEYUP, K_w,
+                           KEYDOWN, KEYUP,
+                           K_DOWN, K_s,
+                           K_UP, K_w,
                            K_LEFT, K_a,
                            K_RIGHT, K_d,
                            QUIT,
-                           K_ESCAPE, K_UP, K_DOWN, K_RCTRL, K_LCTRL, K_SPACE
+                           K_ESCAPE, K_RCTRL, K_LCTRL, K_SPACE,
+                           K_1, K_2, K_3, K_4,
+                           K_x
                            )
+
 from fundo import Fundo
 from elementos import ElementoSprite
+from sons import Sons
+
 import random
 
 class Jogo:
-    def __init__(self, icon="virus_orange.png", soundtrack="corona_soundtrack.mp3", size=(900,810), fullscreen=False):
+    def __init__(self, size=(850, 800), fullscreen=False, icon="virus_orange.png"):
         self.elementos = {}
         pygame.init()
-        self.tela = pygame.display.set_mode(size)
+        flags = pygame.DOUBLEBUF
+        if fullscreen:
+            flags |= FULLSCREEN
+        self.tela = pygame.display.set_mode(size, flags=flags, depth=16)
         self.fundo = Fundo()
         self.jogador = None
         self.interval = 0
         self.nivel = 0
         self.fonte = pygame.font.SysFont("monospace", 32)
-        flags = DOUBLEBUF
-        if fullscreen:
-            flags |= FULLSCREEN
+        self.over_font = pygame.font.Font('freesansbold.ttf', 64)
+        self.menu_font = pygame.font.SysFont("freesansbold.ttf", 32)
+        self.opc_font = pygame.font.SysFont("freesansbold.ttf", 28)
 
         self.screen_size = self.tela.get_size()
-        pygame.mouse.set_visible(1)
+        pygame.mouse.set_visible(0)
         pygame.display.set_caption('Corona Shooter')
         icon = os.path.join('imagens', icon)
         icon = pygame.image.load(icon).convert()
         pygame.display.set_icon(icon)
-
-        #Soundtrack
-        from pygame import mixer
-        soundtrack = os.path.join('sons', soundtrack)
-        mixer.music.load(soundtrack)
-        mixer.music.set_volume(0.07)
-        mixer.music.play(-1)
-
-
         self.run = True
 
 
     def escreve_placar(self):
         vidas = self.fonte.render(f'Vidas: {self.jogador.get_lives()*"❤"}', 1, (255, 255, 0), (0, 0, 0))
+        fase = self.fonte.render(f'Fase: {self.nivel}', 1, (255, 255, 0), (0, 0, 0))
         score = self.fonte.render(f'Score: {self.jogador.pontos}', 1, (255, 255, 0), (0, 0, 0))
-        self.tela.blit(vidas, (30, 25))
-        self.tela.blit(score, (self.screen_size[0] - 200, 25))
+        self.tela.blit(vidas, (25, 20))
+        self.tela.blit(fase, (self.screen_size[0] - self.screen_size[0]/2.5, 20))
+        self.tela.blit(score, (self.screen_size[0] - 180, 20))
+
+
+    def jogo_text(self):
+        over_text = self.over_font.render("CORONA SHOOTER", 1, (255, 255, 255))
+        self.tela.blit(over_text, (self.screen_size[0]/2 - self.screen_size[0]/2.7,self.screen_size[1]/3.25))
+
+    def menu(self):
+        replay = self.menu_font.render("Jogar  (1)", 1, (255, 255, 255))
+        tutorial = self.menu_font.render("Tutorial  (2)", 1, (255, 255, 255))
+        personalizar = self.menu_font.render("Personalizar  (3)", 1, (255, 255, 255))
+        quit = self.menu_font.render("Sair  (4)", 1, (255, 255, 255))
+        self.tela.blit(replay, (self.screen_size[0]/2 - self.screen_size[0]/4,self.screen_size[1]/2))
+        self.tela.blit(tutorial, (self.screen_size[0]/2 - self.screen_size[0]/4, (self.screen_size[1]/2)+40))
+        self.tela.blit(personalizar, (self.screen_size[0]/2 - self.screen_size[0]/4, (self.screen_size[1]/2)+80))
+        self.tela.blit(quit, (self.screen_size[0]/2 - self.screen_size[0]/4, (self.screen_size[1] / 2) + 120))
+
+    def tutorial_text(self):
+        tutorial_title = self.over_font.render("TUTORIAL", 1, (255, 255, 255))
+        tutorial_desc = self.menu_font.render("Finge que tem um texto explicativo aqui.", 1, (255, 255, 255))
+        tutorial_opc1 = self.menu_font.render("<-- Voltar  (x)", 1, (255, 255, 255))
+        self.tela.blit(tutorial_title, (self.screen_size[0]/2 - self.screen_size[0]/2.7, self.screen_size[1]/5))
+        self.tela.blit(tutorial_desc, (self.screen_size[0] / 2 - self.screen_size[0] / 2.7, self.screen_size[1] / 3.5))
+        self.tela.blit(tutorial_opc1, ((self.screen_size[0] / 2 - self.screen_size[0] / 2.5), self.screen_size[1] / 1.5))
+
+    def personalizar_text(self):
+        personalizar = self.over_font.render("PERSONALIZAR", 1, (255, 255, 255))
+        personalizar_desc = self.menu_font.render("Escolha a cor da sua seringa:", 1, (255, 255, 255))
+        personalizar_opc1 = self.opc_font.render("Roxo Padrão  (1)", 1, (255, 255, 255))
+        personalizar_opc2 = self.opc_font.render("Vermelho  (2)" , 1, (255, 255, 255))
+        personalizar_opc3 = self.opc_font.render("Rosa  (3)", 1, (255, 255, 255))
+        personalizar_voltar = self.opc_font.render("Voltar  (x)", 1, (255, 255, 255))
+        self.tela.blit(personalizar, (self.screen_size[0]/2 - self.screen_size[0]/2.7, self.screen_size[1]/5))
+        self.tela.blit(personalizar_desc, (self.screen_size[0]/2 - self.screen_size[0]/2.7, (self.screen_size[1]/3.5)+60))
+        self.tela.blit(personalizar_opc1, (self.screen_size[0]/2 - self.screen_size[0]/2.7, (self.screen_size[1]/3.5)+140))
+        self.tela.blit(personalizar_opc2, (self.screen_size[0]/2 - self.screen_size[0]/2.7, (self.screen_size[1]/3.5)+180))
+        self.tela.blit(personalizar_opc3, (self.screen_size[0]/2 - self.screen_size[0]/2.7, (self.screen_size[1]/3.5)+220))
+        self.tela.blit(personalizar_voltar, ((self.screen_size[0]/2 - self.screen_size[0]/2.7), (self.screen_size[1]/3.5)+260))
 
     def game_over_text(self):
-        over_text = self.fonte.render("GAME OVER", True, (255, 255, 255), (0, 0, 0))
-        self.tela.blit(over_text, (200, 250))
+        over_text = self.over_font.render("GAME OVER!", 1, (255, 255, 255))
+        self.tela.blit(over_text, (self.screen_size[0]/2 - self.screen_size[0]/4,self.screen_size[1]/3.25))
 
 
     def manutenção(self):
@@ -118,23 +159,26 @@ class Jogo:
         self.verifica_impactos(self.jogador, self.elementos["tiros_inimigo"],
                                self.jogador.alvejado)
         if self.jogador.morto:
-            pygame.mixer.music.stop()
-            #game_over = os.path.join('sons', game_over)
-            #game_over = pygame.mixer.Sound(game_over)
-            #game_over.play()
-            #self.game_over_text()
-            #self.run = Falses
+            game_over = os.path.join('sons', game_over)
+            game_over = pygame.mixer.Sound(game_over)
+            game_over.set_volume(0.08)
+            game_over.play()
+            J.loop_morto()
+            #self.run = False
             return
 
         # Verifica se o personagem trombou em algum inimigo
         self.verifica_impactos(self.jogador, self.elementos["virii"],
                                self.jogador.colisão)
         if self.jogador.morto:
-            pygame.mixer.music.stop()
-
-            self.game_over_text()
+            game_over = os.path.join('sons', game_over)
+            game_over = pygame.mixer.Sound(game_over)
+            game_over.set_volume(0.08)
+            game_over.play()
+            J.loop_morto()
             #self.run = False
             return
+
         # Verifica se o personagem atingiu algum alvo.
         hitted = self.verifica_impactos(self.elementos["tiros"],
                                         self.elementos["virii"],
@@ -142,6 +186,7 @@ class Jogo:
         if hitted:
             explosionSound = os.path.join('sons', explosionSound)
             explosionSound = pygame.mixer.Sound(explosionSound)
+            explosionSound.set_volume(0.07)
             explosionSound.play()
 
         # Aumenta a pontos baseado no número de acertos:
@@ -149,16 +194,14 @@ class Jogo:
 
     def trata_eventos(self):
         event = pygame.event.poll()
-        # serve para quebrar o loop, fechar a janela.
         if event.type == pygame.QUIT:
             self.run = False
-
-
+        # serve para quebrar o loop, fechar a janela.
         if event.type in (KEYDOWN, KEYUP):
             key = event.key
             if key == K_ESCAPE:
                 self.run = False
-            elif key in (K_LCTRL, K_RCTRL, K_SPACE):
+            elif key == K_SPACE:
                 self.interval = 0
                 self.jogador.atira(self.elementos["tiros"])
             elif key in (K_UP, K_w):
@@ -169,6 +212,8 @@ class Jogo:
                 self.jogador.accel_right()
             elif key in (K_LEFT, K_a):
                 self.jogador.accel_left()
+            elif key in (K_ESCAPE, K_2):
+                self.run = False
 
         keys = pygame.key.get_pressed()
         if self.interval > 10:
@@ -176,14 +221,66 @@ class Jogo:
             if keys[K_RCTRL] or keys[K_LCTRL]:
                 self.jogador.atira(self.elementos["tiros"])
 
-    def loop(self):
+    def menu_eventos(self):
+        event = pygame.event.poll()
+        if event.type == pygame.QUIT:
+            self.run = False
+        # serve para quebrar o loop, fechar a janela.
+        if event.type in (KEYDOWN, KEYUP):
+            key = event.key
+            if key == K_1:
+                J.loop_vivo()
+            elif key == K_2:
+                J.loop_tutorial()
+            elif key == K_3:
+                J.loop_personalizar()
+            elif key in (K_ESCAPE, K_4):
+                self.run = False
+
+    def tutorial_eventos(self):
+        event = pygame.event.poll()
+        if event.type == pygame.QUIT:
+            self.run = False
+        # serve para quebrar o loop, fechar a janela.
+        if event.type in (KEYDOWN, KEYUP):
+            key = event.key
+            if key == K_x:
+                J.loop_menu()
+            elif key == K_ESCAPE:
+                self.run = False
+
+    def personalizar_eventos(self):
+        event = pygame.event.poll()
+        if event.type == pygame.QUIT:
+            self.run = False
+        # serve para quebrar o loop, fechar a janela.
+        if event.type in (KEYDOWN, KEYUP):
+            key = event.key
+            #if key == K_1:
+                #J.loop_menu()
+            #elif key == K_2:
+                #J.loop_menu()
+            #elif key == K_3:
+                #J.loop_menu()
+            if key == K_x:
+                J.loop_menu()
+            elif key == K_ESCAPE:
+                self.run = False
+
+
+    def loop_vivo(self, soundtrack="corona_soundtrack.mp3"):
         clock = pygame.time.Clock()
         dt = 16
         self.elementos['virii'] = pygame.sprite.RenderPlain(Virus([120, 50]))
-        self.jogador = Jogador([200, 400], 5)
+        self.jogador = Jogador([self.screen_size[0]/6, self.screen_size[1]-150], 5)
         self.elementos['jogador'] = pygame.sprite.RenderPlain(self.jogador)
         self.elementos['tiros'] = pygame.sprite.RenderPlain()
         self.elementos['tiros_inimigo'] = pygame.sprite.RenderPlain()
+        soundtrack = os.path.join('sons', soundtrack)
+        mixer.music.load(soundtrack)
+        mixer.music.set_volume(0.05)
+        pygame.mixer.music.play(-1)
+
         while self.run:
             clock.tick(1000 / dt)
 
@@ -200,6 +297,100 @@ class Jogo:
 
             pygame.display.flip()
 
+    def loop_morto(self, menu_soundtrack="menu_soundtrack.mp3"):
+        clock = pygame.time.Clock()
+        dt = 16
+        self.elementos['virii'] = pygame.sprite.RenderPlain(Virus([120, 50]))
+        self.jogador = Jogador([self.screen_size[0]/6, self.screen_size[1]-150], 5)
+        self.elementos['jogador'] = pygame.sprite.RenderPlain(self.jogador)
+        self.elementos['tiros'] = pygame.sprite.RenderPlain()
+        self.elementos['tiros_inimigo'] = pygame.sprite.RenderPlain()
+        menu_soundtrack = os.path.join('sons', menu_soundtrack)
+        mixer.music.load(menu_soundtrack)
+        mixer.music.set_volume(0.025)
+        pygame.mixer.music.play(-1)
+        while self.run:
+            clock.tick(1000 / dt)
+            #self.ação_elemento()
+            self.manutenção()
+            self.atualiza_elementos(dt)
+            self.desenha_elementos()
+            self.escreve_placar()
+            self.game_over_text()
+            self.menu()
+            self.menu_eventos()
+            pygame.display.flip()
+
+
+    def loop_menu(self, menu_soundtrack="menu_soundtrack.mp3"):
+        clock = pygame.time.Clock()
+        dt = 16
+        self.elementos['virii'] = pygame.sprite.RenderPlain(Virus([120, 50]))
+        self.jogador = Jogador([self.screen_size[0]/6, self.screen_size[1]-150], 5) #Jogador (Posição, Vidas)
+        #self.elementos['jogador'] = pygame.sprite.RenderPlain(self.jogador)
+        self.elementos['tiros'] = pygame.sprite.RenderPlain()
+        self.elementos['tiros_inimigo'] = pygame.sprite.RenderPlain()
+        menu_soundtrack = os.path.join('sons', menu_soundtrack)
+        mixer.music.load(menu_soundtrack)
+        mixer.music.set_volume(0.025)
+        pygame.mixer.music.play(-1)
+        while self.run:
+            clock.tick(1000 / dt)
+            #self.ação_elemento()
+            self.manutenção()
+            self.atualiza_elementos(dt)
+            self.desenha_elementos()
+            self.escreve_placar()
+            self.jogo_text()
+            self.menu()
+            self.menu_eventos()
+            pygame.display.flip()
+
+    def loop_tutorial(self, menu_soundtrack="menu_soundtrack.mp3"):
+        clock = pygame.time.Clock()
+        dt = 16
+        self.elementos['virii'] = pygame.sprite.RenderPlain(Virus([120, 50]))
+        self.jogador = Jogador([self.screen_size[0]/6, self.screen_size[1]-150], 5)
+        #self.elementos['jogador'] = pygame.sprite.RenderPlain(self.jogador)
+        self.elementos['tiros'] = pygame.sprite.RenderPlain()
+        self.elementos['tiros_inimigo'] = pygame.sprite.RenderPlain()
+        menu_soundtrack = os.path.join('sons', menu_soundtrack)
+        mixer.music.load(menu_soundtrack)
+        mixer.music.set_volume(0.03)
+        pygame.mixer.music.play(-1)
+        while self.run:
+            clock.tick(1000 / dt)
+            #self.ação_elemento()
+            self.manutenção()
+            self.atualiza_elementos(dt)
+            self.desenha_elementos()
+            self.tutorial_text()
+            #self.menu_eventos()
+            self.tutorial_eventos()
+            pygame.display.flip()
+
+    def loop_personalizar(self, menu_soundtrack="menu_soundtrack.mp3"):
+        clock = pygame.time.Clock()
+        dt = 16
+        #self.elementos['virii'] = pygame.sprite.RenderPlain(Virus([120, 50]))
+        self.jogador = Jogador([self.screen_size[0]/6, self.screen_size[1]-150], 5)
+        self.elementos['jogador'] = pygame.sprite.RenderPlain(self.jogador)
+        self.elementos['tiros'] = pygame.sprite.RenderPlain()
+        self.elementos['tiros_inimigo'] = pygame.sprite.RenderPlain()
+        menu_soundtrack = os.path.join('sons', menu_soundtrack)
+        mixer.music.load(menu_soundtrack)
+        mixer.music.set_volume(0.03)
+        pygame.mixer.music.play(-1)
+        while self.run:
+            clock.tick(1000 / dt)
+            #self.ação_elemento()
+            self.manutenção()
+            self.atualiza_elementos(dt)
+            self.desenha_elementos()
+            self.personalizar_text()
+            #self.menu_eventos()
+            self.personalizar_eventos()
+            pygame.display.flip()
 
 class Nave(ElementoSprite):
     def __init__(self, position, lives=0, speed=[0, 0], image=None, new_size=[100, 248]):
@@ -258,7 +449,7 @@ class Nave(ElementoSprite):
 class Virus(Nave):
     def __init__(self, position, lives=1, speed=None, image=None, size=(80,80)):
         if not image:
-            image = "virus_verde.png"
+            image = "virus_verm.png"
         super().__init__(position, lives, speed, image, size)
 
 
@@ -352,4 +543,4 @@ class Tiro(ElementoSprite):
 
 if __name__ == '__main__':
     J = Jogo()
-    J.loop()
+    J.loop_menu()
